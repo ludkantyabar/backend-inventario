@@ -17,7 +17,7 @@ public class SupplierDTO {
 
     private Long id;
 
-    @NotBlank(message = "Name is required")
+    @NotBlank(message = "Nombre es requerido")
     private String name;
 
     private String address;

@@ -23,17 +23,17 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name is required")
+    @NotBlank(message = "Nombre es requerido")
     private String name;
 
     @NotBlank(message = "Sku is required")
     @Column(unique = true)
     private String sku;
 
-    @Positive(message = "Product price msut be a positive value") //español: "El precio del producto debe ser un valor positivo"
+    @Positive(message = "El precio del producto debe ser un valor positivo")
     private BigDecimal price;
 
-    @Min(value = 0, message = "Stock quantity cannot be lesser than zero")//español`: "La cantidad de stock no puede ser menor que cero"
+    @Min(value = 0, message = "La cantidad de stock no puede ser menor que cero")
     private Integer stockQuantity;
 
     private String description;
