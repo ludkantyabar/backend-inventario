@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phegondev.InventoryManagementSystem.dto.*;
 import com.phegondev.InventoryManagementSystem.enums.UserRole;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,23 +28,27 @@ class ControllerLayerTDDTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static String adminEmail;
-    private static final String adminPassword = "adminpassword";
+    private String adminEmail;
+    private final String adminPassword = "adminpassword";
+    private String adminToken;
 
-    @BeforeAll
-    static void setup(@Autowired MockMvc mockMvc, @Autowired ObjectMapper objectMapper) throws Exception {
-        adminEmail = "admin_" + System.currentTimeMillis() + "@example.com";
-        RegisterRequest req = new RegisterRequest();
-        req.setName("Admin");
-        req.setEmail(adminEmail);
-        req.setPassword(adminPassword);
-        req.setPhoneNumber("123456789");
-        req.setRole(UserRole.ADMIN);
+    @BeforeEach
+    void setup() throws Exception {
+        if (adminEmail == null) {
+            adminEmail = "admin_" + System.currentTimeMillis() + "@example.com";
+            RegisterRequest req = new RegisterRequest();
+            req.setName("Admin");
+            req.setEmail(adminEmail);
+            req.setPassword(adminPassword);
+            req.setPhoneNumber("123456789");
+            req.setRole(UserRole.ADMIN);
 
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
+            mockMvc.perform(post("/api/auth/register")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk());
+        }
+        adminToken = getAdminToken();
     }
 
     private String getAdminToken() throws Exception {
@@ -85,12 +89,11 @@ class ControllerLayerTDDTests {
 
     @Test
     void testCreateCategory() throws Exception {
-        String token = getAdminToken();
         CategoryDTO dto = new CategoryDTO();
         dto.setName("TDD Category " + System.currentTimeMillis());
 
         mockMvc.perform(post("/api/categories/add")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -99,13 +102,122 @@ class ControllerLayerTDDTests {
 
     @Test
     void testAddSupplier() throws Exception {
-        String token = getAdminToken();
         SupplierDTO dto = new SupplierDTO();
         dto.setName("TDD Supplier " + System.currentTimeMillis());
         dto.setAddress("Test Address");
 
         mockMvc.perform(post("/api/suppliers/add")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    void testGetAllUsers() throws Exception {
+        mockMvc.perform(get("/api/users/all")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    void testGetAllCategories() throws Exception {
+        mockMvc.perform(get("/api/categories/all")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    void testGetAllProducts() throws Exception {
+        mockMvc.perform(get("/api/products/all")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    void testGetAllSuppliers() throws Exception {
+        mockMvc.perform(get("/api/suppliers/all")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    void testGetAllTransactions() throws Exception {
+        mockMvc.perform(get("/api/transactions/all")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+
+
+
+    // Obtener usuarios: resultado esperado (ya existe)
+    @Test
+    void testGetAllUsersExpected() throws Exception {
+        mockMvc.perform(get("/api/users/all")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    // Obtener categorías: resultado esperado
+    @Test
+    void testGetAllCategoriesExpected() throws Exception {
+        mockMvc.perform(get("/api/categories/all")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    // Obtener proveedores: resultado esperado
+    @Test
+    void testGetAllSuppliersExpected() throws Exception {
+        mockMvc.perform(get("/api/suppliers/all")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    void testCreateCategoryWithPost() throws Exception {
+        CategoryDTO dto = new CategoryDTO();
+        dto.setName("Nueva Categoría " + System.currentTimeMillis());
+
+        mockMvc.perform(post("/api/categories/add")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    void testSimpleCreateCategory() throws Exception {
+        CategoryDTO dto = new CategoryDTO();
+        dto.setName("CategoriaSimple_" + System.currentTimeMillis());
+
+        mockMvc.perform(post("/api/categories/add")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    void testAddSupplierUno() throws Exception {
+        SupplierDTO dto = new SupplierDTO();
+        dto.setName("ProveedorUno_" + System.currentTimeMillis());
+        dto.setAddress("Dirección Uno");
+
+        mockMvc.perform(post("/api/suppliers/add")
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -116,48 +228,4 @@ class ControllerLayerTDDTests {
 
 
 
-    @Test
-    void testGetAllUsers() throws Exception {
-        String token = getAdminToken();
-        mockMvc.perform(get("/api/users/all")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200));
-    }
-
-    @Test
-    void testGetAllCategories() throws Exception {
-        String token = getAdminToken();
-        mockMvc.perform(get("/api/categories/all")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200));
-    }
-
-    @Test
-    void testGetAllProducts() throws Exception {
-        String token = getAdminToken();
-        mockMvc.perform(get("/api/products/all")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200));
-    }
-
-    @Test
-    void testGetAllSuppliers() throws Exception {
-        String token = getAdminToken();
-        mockMvc.perform(get("/api/suppliers/all")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200));
-    }
-
-    @Test
-    void testGetAllTransactions() throws Exception {
-        String token = getAdminToken();
-        mockMvc.perform(get("/api/transactions/all")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200));
-    }
 }
