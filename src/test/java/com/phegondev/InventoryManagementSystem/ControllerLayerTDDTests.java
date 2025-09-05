@@ -241,5 +241,13 @@ class ControllerLayerTDDTests {
                 .andExpect(jsonPath("$.status").value(200));
     }
 
+    @Test
+    void testGetAllCategoriesSimple() throws Exception {
+        mockMvc.perform(get("/api/categories/all")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
 
 }
