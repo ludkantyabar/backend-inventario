@@ -224,8 +224,22 @@ class ControllerLayerTDDTests {
                 .andExpect(jsonPath("$.status").value(200));
     }
 
+    // Test POST para crear usuario
+    @Test
+    void testPostRegisterUserSimple() throws Exception {
+        RegisterRequest req = new RegisterRequest();
+        req.setName("UsuarioTest");
+        req.setEmail("usuario_" + System.currentTimeMillis() + "@test.com");
+        req.setPassword("testpass");
+        req.setPhoneNumber("987654321");
+        req.setRole(UserRole.MANAGER);
 
-
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
 
 
 }
